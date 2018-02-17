@@ -44,22 +44,38 @@ def page_not_found(error):
 #   These return JSON, rather than rendering pages.
 #
 ###############
-@app.route("/_calc_times")
+@app.route("/_calc_times", methods=['GET', 'POST'])
 def _calc_times():
     """
     Calculates open/close times from miles, using rules
     described at https://rusa.org/octime_alg.html.
     Expects one URL-encoded argument, the number of miles.
     """
+
     app.logger.debug("Got a JSON request")
+
     km = request.args.get('km', 999, type=float)
+    distance = request.args.get('distance', 200, type=int)
+    begin_time = request.args.get('begin_time', type=str)
+    begin_date = request.args.get('begin_date', type=str)
+
     app.logger.debug("km={}".format(km))
     app.logger.debug("request.args: {}".format(request.args))
-    # FIXME: These probably aren't the right open and close times
-    # and brevets may be longer than 200km
-    open_time = acp_times.open_time(km, 200, arrow.now().isoformat)
-    close_time = acp_times.close_time(km, 200, arrow.now().isoformat)
+
+    print("request.args: {}".format(request.args))
+    print("dates:", begin_time, begin_date)
+
+    print(begin_date + " " + begin_time)
+    start_arrow = arrow.get(begin_date + " " + begin_time, "YYYY-MM-DD HH:mm")
+    print('start', start_arrow.isoformat())
+
+    open_time = acp_times.open_time(km, distance, start_arrow)
+    close_time = acp_times.close_time(km, distance, start_arrow)
     result = {"open": open_time, "close": close_time}
+
+    print("open, close")
+    print(open_time, close_time)
+
     return flask.jsonify(result=result)
 
 
